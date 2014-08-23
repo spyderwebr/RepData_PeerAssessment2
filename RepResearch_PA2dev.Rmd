@@ -1,7 +1,7 @@
 ---
-title: 'Health and Economic Impacts of Storm Events: 1950-2011'
+title: 'Total health and economic impacts of US storm events from 1950-2011 according to the NOAA Storm Database'
 author: "Richard Webber"
-date: "Monday, August 18, 2014"
+date: "Monday, August 23, 2014"
 output:
   html_document:
     theme: cerulean
@@ -11,11 +11,11 @@ output:
 This is a report on the health and economic impacts of storm event types categorized in the NOAA Storm Database over the time period 1950-2011. The objective is to analyze the database to determine:  
 1. which events were most harmful to human health, and  
 2. which events have the greatest economic impact.  
-Human health impacts are assessed via the number of fatalities and injuries associated with event types. Economic impacts are assessed by totaling property and agricultural damages associated with event types. The analysis shows that tornado events have caused the largest number of fatalities and injuries during the 1950-2011 time period. Flooding causes the greatest amount of property damage, while drought causes the most agricultural damage (flooding is also a close second for agricultural damage). As significant changes in population distribution, building codes, regulations, development intensity and patterns, and climate have occurred since 1950, the database was subsetted to look at the lastest decade, 2000-2011. The data shows that "extreme heat" event types have overtaken "tornados" as having the largest impact on fatalities. This may deserve futher investigation in light of predictions in the recent (2014) US National Climate Assessment Report.  
+Human health impacts are assessed via the total number of fatalities and injuries associated with event types. Economic impacts are assessed by totaling property and agricultural damages associated with event types. The analysis shows that tornado events have caused the largest number of fatalities and injuries. Flooding causes the greatest amount of total and property damage economic impact, while drought causes the most agricultural damage (flooding is also a close second for agricultural damage). As significant changes in population distribution, building codes, regulations, development intensity, and climate have likely occurred since 1950, the database was subsetted to look at the whether results were the same for a more recent period, 2000-2011. The data shows that "extreme heat" event types have overtaken "tornados" as having the largest impact on fatalities. This result may deserve futher investigation in light of US National Climate Assessment Report (2014) predictions for more frequenct and longer heat duration events the coming decades.  
 
 ## Section 1. Data Processing  
 
-The data to be used for the project is the **NOAA Storm Database**. The following code downloads the version of the database provided for this project. The NOAA Storm Database categorizes storm related events with 37 variables; those of particular importance with regard to this analysis are variables that present: the event type, date, location, impact on human health (fatalities and injuries), and economic damage (structural and agricultural). So, given the large size of the data base, processing will immediately strip out unnecessary columns to improve the speed of manipulation. 
+The data for this project was taken from the **NOAA Storm Database**. This database tracks and categorizes details and impacts of all weather events across the US. The following code downloads the version of the database provided for this project. The NOAA Storm Database categorizes storm related events with 37 variables; those of particular importance with regard to this analysis are variables that present: the event type, date, location, impact on human health (fatalities and injuries), and economic damage (structural and agricultural). So, given the large size of the data base, the initial processing strips out unnecessary data to improve the speed of manipulation. 
 
 
 ```{r download and prelimin processing, cache=TRUE}
@@ -40,9 +40,12 @@ Details on the conventions and codes authorities use to report storm events to t
 1. `r length(unique(StormDT$EVTYPE[grep("tornado", StormDT$EVTYPE)]))` unique entries for *tornado*,  
 2. `r length(unique(StormDT$EVTYPE[grep("wind", StormDT$EVTYPE)]))` for *wind*, and  
 3. `r length(unique(StormDT$EVTYPE[grep("flood", StormDT$EVTYPE)]))` for *flood*.  
-Accordingly, *event types* will be processed into summary factor categories.  
-On problem in summarizing EVTYPE in factors is event type entries (EVTYPE) often have multiple types per entry. For example, many thunderstorm entries also reference wind and hail and rain, in the same EVTYPE field, and so on. As thunderstorms often have damaging winds, I have made the choice to prioritize thunderstorms and by pulling thunderstorm first, then overwriting the entry in EVTYPE, I eliminate double counting into the factor summary. Entries that just reference wind are counted as such.  
+Accordingly, it is necessary to process event types into summary factor categories.  
+On problem in summarizing EVTYPE in factors is event type entries (EVTYPE) often have multiple types per entry. For example, many thunderstorm entries also reference wind and hail and rain, in the same EVTYPE field, and so on. As thunderstorms often have damaging winds, I have made the choice to prioritize thunderstorms and by pulling thunderstorm first, then by overwriting the entry in EVTYPE, I eliminate double counting into the factor summary. Entries that just reference wind are counted as such.  
+
 ```{r event factor processing}
+# I found it necessary to re-source data.table again, perhaps due to caching
+# in the first code chunk -- not sure but it works
 library(data.table)
 # the order of EVtypesearch was setup to deal with multiple entries
 # as described in the text
@@ -75,7 +78,7 @@ EVdescription <- c("hurricane & tropical storms/depressions",
                    "wildfires includes forest & brush", "fog", 
                    "seiche & volcanic ash events, and mislabeled types")
 EVDT <- data.frame(EVfactorlist, EVdescription)
-print("Table 1. Factor definitions for event types.")
+print("Table 1. Factors and definitions for event types.")
 EVDT
 StormDT <- StormDT[, EVfactor:= "other"]
 for(i in seq_along(EVtypesearch)){
@@ -90,8 +93,10 @@ StormDT <- StormDT[, EVfactor:= factor(EVfactor)]
 StormDT <- StormDT[, EVTYPE:= NULL]
 ```
   
-In setting up this analysis, event categories also included "seiche" and "volcanic ash", however, on inspection of the analysis results these events did not have significant health or economic impacts compared to the others. "Sieche" and "volcanic ash" categories were combined into the "other" category.
-According to the NOAA Storm Database documentation, property and crop damage estimates are reported with "K", "M", and "B" factors to indicate whether damage estimate values should be multiplied by 10^3^, 10^6^, and 10^9^ respectively. As with EVTYPE entries, entries into  property and crop multiplier factors columns are polluted with with nonappropriate entries. For this report it is not practical to investigate deviant entries, so all entries not conforming to the proper format will be ignored and a multiplier of 1 assumed.  
+Event categories also initially included "seiche" and "volcanic ash", however, on inspection of the analysis results these events did not have significant health or economic impacts. "Sieche" and "volcanic ash" categories were relegated into the "other" category. After applying this cleaning process, a significant number of mislabeled or poorly labeled EVTYPE factors remained in the database, these events were lumped into the "other" factor. By including "other", and therefore counting the total health and economic impacts not assigned, we can determine whether further work to clean up "other" is necessary, *i.e.*, whether it may change our conclusions.  
+ 
+According to the NOAA Storm Database documentation, property and crop damage estimates are reported with "K", "M", and "B" factors to indicate whether damage estimate values should be multiplied by 10^3^, 10^6^, and 10^9^ respectively. As with EVTYPE entries, entries into  property and crop multiplier factors columns are polluted with with nonappropriate entries. For this report it was not practical to investigate deviant entries, so all entries not conforming to the proper format will be ignored and a multiplier of 1 assumed.  
+
 ```{r damage estimate multipliers}
 multiplierfactor <- c("k", "m", "b")
 multiplier <- c(10^3, 10^6, 10^9)
@@ -106,20 +111,21 @@ StormDT <- StormDT[, PROPDMGEXP:= NULL]
 StormDT <- StormDT[, CROPDMGEXP:= NULL]
 ```
   
-The final processing step is to prepare the data for results discussion. In this final data processing section, two additional adjustments are made to the data:  
-1. event factors "seiche", and "volcanic ash" are drop as they have had no reported impact on health and the smallest economic impacts; and,  
-2. two parallel datasets are prepare, one summarizing impacts over the full history of the database, 1950-2011, and one for more recent history, 2000-2011.
+The final processing step is to prepare the data for results discussion. Two parallel datasets are prepare, one summarizing impacts over the full history of the database, 1950-2011, and one for more recent history, 2000-2011.
   
-```{r data summary 1950-2011}
+```{r data summarization}
 library(reshape2)
 StormDT <- StormDT[, BGN_DATE:= year(strptime(BGN_DATE, "%m/%d/%Y"))]
 # subset dataset to recent history >= 2000
 StormDT2000 <- StormDT[BGN_DATE >= 2000,]
 # prepare 1950-2011 data
-StormDT <- melt(StormDT, id.vars=c("EVfactor"), measure.vars=c("FATALITIES", "INJURIES", "PROPDMG", "CROPDMG"), na.rm=TRUE)
+StormDT <- melt(StormDT, id.vars=c("EVfactor"), measure.vars=c("FATALITIES", 
+                "INJURIES", "PROPDMG", "CROPDMG"), na.rm=TRUE)
 StormDT <- dcast.data.table(StormDT, EVfactor~variable, sum)
 # same for 2000-2011 data
-StormDT2000 <- melt(StormDT2000, id.vars=c("EVfactor"), measure.vars=c("FATALITIES", "INJURIES", "PROPDMG", "CROPDMG"), na.rm=TRUE)
+StormDT2000 <- melt(StormDT2000, id.vars=c("EVfactor"), 
+                        measure.vars=c("FATALITIES", "INJURIES", "PROPDMG", 
+                        "CROPDMG"), na.rm=TRUE)
 StormDT2000 <- dcast.data.table(StormDT2000, EVfactor~variable, sum)
 
 # order StormDT by impact on total health, reorder factors
@@ -141,7 +147,7 @@ StormMat2000 <- t(as.matrix(StormDT2000[, 1:= NULL]))
 colnames(StormMat2000) <- healthlevels
 
 # in StormMat, crop damage = $0 for "fog" events, this was set to a 
-# nominally insignificant value of $1000 to allow including this item 
+# nominally insignificant value of $1000 to allow including this factor 
 # in Figure 2 plot, this has no effect on the Results and Synopis presented
 StormMat[4, 8] <- 1000
 
@@ -153,14 +159,14 @@ StormMat2000[2,5] <- 1
 ```
   
 ## Section 2. Results  
-Total health impact with respect to the event types listed in Table 1 can be assessed from the total number of fatalities and injuries attributed to that event type. Figure 1 shows that "tornado"" related events have had the greatest impact (for both fatalities and injuries) over the time period (1950-2011) covered by the NOAA Storm Dataebase. Other event types that show significant health impacts include: "extreme heat", "wind", "flooding", and "lightning". The "other" category captures health impacts associated primarily with events that are poorly classified or mislabeled in the database. While the "other" category shows a significant health impact, further analysis to fix those classification are unlikely to affect the conclusions drawn in the above comments.
+Total health impact with respect to the event types listed in Table 1 can be assessed from the total number of fatalities and injuries attributed to that event type. Figure 1 shows that "tornado"" related events have had the greatest impact (for both fatalities and injuries) over the time period (1950-2011) covered by the NOAA Storm Dataebase. Other event types that show significant health impacts include: "extreme heat", "wind", "flooding", and "lightning". As explain in the data analysis section, the "other" category captures health impacts associated primarily with events that are poorly classified or mislabeled. While the "other" category shows a significant health impact, further analysis to fix those classification are unlikely to affect the conclusions drawn in the above comments.
 
 ```{r Figure 1}
 barplot(StormMat[1:2,], width=1, horiz=TRUE, space=0.3, cex.name=.7, log="x", las=2, col=rainbow(10), xlab="fatalities & injuries", main="Figure 1. Health impact from storm events 1950-2011")
 legend("bottomright", fill=rainbow(10), cex=0.9, legend=c("fatalities", "injuries"))
 ```
   
-**Figure 1.** Total health impact (fatalities and injuries) attributed to storm events in the NOAA Storm Database over the period 1950 to November 2011. Note that fatalities and injuries are plotted on a log scale so that the length of bar for injuries relative to fatalities does not necessarily reflect the amount.  
+**Figure 1.** Total health impact (fatalities and injuries) attributed to storm events in the NOAA Storm Database over the period 1950 to November 2011. Note that fatalities and injuries are plotted on a log scale so that the length of the bar for injuries relative to fatalities does not necessarily reflect the amount.  
   
 Total economic impact is measured in the NOAA Storm Database in terms of property damage and crop (agricultural) damage variables. Economic impact was determined with respect to the event types listed in Table 1. Figure 2 shows that "flooding" related events have had the greatest total economic impact over the time period (1950-2011) covered in the NOAA Storm Database. With regard to agricultural damage, "drought" and "flooding" have had the greatest impacts. With regard to property damage, "flooding", "hurricanes", "tornados", and "coastal surges" have had the greatest impact. As discussed for Figure 1, the "other" category captures impacts associated primarily with events that are poorly classified or mislabeled. The inderminate econonic losses  captured in the "other" category are not significant with respect to the conclusions drawn in the above comments.
 
@@ -169,13 +175,14 @@ barplot(StormMat[4:3,], width=1, horiz=TRUE, space=0.3, cex.name=.7, log="x", la
 legend("topleft", fill=rainbow(5), bg="white", cex=0.9, legend=c("agricultural damage", "property damage"))
 ```
   
-**Figure 2.** Total economic impact (agricultural and property damage) attributed to storm events in the NOAA Storm Database over the period 1950 to November 2011. Note that damage $s are reported on a log scale (see comments in Figure 1 caption). Also note that as described in the section 1, agricultural impacts from "fog" events were adjusted to a small nominal insignificant value to allow inclusion of this event in the plot.
+**Figure 2.** Total economic impact (agricultural and property damage) attributed to storm events in the NOAA Storm Database over the period 1950 to November 2011. Note that damage $s are reported on a log scale (see comments in Figure 1 caption). Also note that as described in the section 1, agricultural impacts from "fog" events were adjusted to a small nominally insignificant value to allow inclusion of this event in the plot.  
 
-The NOAA Storm Database covers ~60 years of event impacts. Over that time, considerable changes have occurred, in particular, in population distribution, building codes, regulations, development intensity and patterns, and climate to name a few. Therefore we might expect to draw different conclusions if a narrower more recent time frame was reviewed. Figure 3 shows total health impacts for the same event types, but for the more recent time period 2000-2011. While "tornado" events continue to produce the greatest number of injuries, fatalities associated with "extreme heat" events have surpassed "tornados". No significant changes in the order of highest impact events for economic consequences were observed (not shown), both for property and agricultural damage. A potential trend to greater impact of "extreme heat" events on human health  may deserve further investigation, particularly in light of the predicted trend of more frequent and greater duration heatwave events forecast for high density urban areas as described in the [US National Climate Assessment Report 2014](nca2014.globalchange.gov).
+The NOAA Storm Database covers ~60 years of event impacts. Over that time, considerable changes have occurred, in particular, in population distribution, building codes, regulations, development intensity and patterns, and climate to name a few. Therefore we might expect to draw different conclusions if a narrower more recent time frame was reviewed. Figure 3 shows total health impacts for the same event types, but for the more recent time period 2000-2011. While "tornado" events continue to produce the greatest number of injuries, fatalities associated with "extreme heat" events have surpassed "tornados". No significant changes in the order of highest impact events for economic consequences were observed (not shown), both for property and agricultural damage. A potential trend to greater impact of "extreme heat" events on human health  may deserve further investigation, particularly in light of the predicted trend of more frequent and greater duration heatwave events forecast for high density urban areas as described in the [US National Climate Assessment Report 2014](nca2014.globalchange.gov).  
 
 ```{r Figure 3}
 barplot(StormMat2000[1:2,], width=1, horiz=TRUE, space=0.3, cex.name=.7, log="x", las=2, col=rainbow(10), xlab="fatalities & injuries", main="Figure 3. Health impact from storm events 2000-2011")
 legend("bottomright", fill=rainbow(10), cex=0.9, legend=c("fatalities", "injuries"))
 ```
   
-**Figure 3.** Total health impact (fatalities and injuries) attributed to storm events in the NOAA Storm Database over the period 2000 to November 2011. Note that fatalities and injuries for "drought" and "extreme cold" events respectively were adjusted to a small nominally insignificant value to allow inclusion of these events in the plot. 
+**Figure 3.** Total health impact (fatalities and injuries) attributed to storm events in the NOAA Storm Database over the period 2000 to November 2011. Note that fatalities and injuries for "drought" and "extreme cold" events respectively were adjusted to a small nominally insignificant value to allow inclusion of these events in the plot.  
+
