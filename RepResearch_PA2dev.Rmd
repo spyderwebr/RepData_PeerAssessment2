@@ -1,5 +1,5 @@
 ---
-title: 'Reproducible Research: Peer Assessment 2 (dev)'
+title: 'Health and Economic Impacts of Storm Events: 1950-2011'
 author: "Richard Webber"
 date: "Monday, August 18, 2014"
 output:
@@ -7,11 +7,11 @@ output:
     theme: cerulean
 ---
 
-This document is a draft of the report and code that will need to be published (R Pubs) as my submission for Reproducible Research peer assessment 2. The objective for that project is to prepare a short report (certain features such as limits on document size, show all code, max of 3 plots (any type) are required) based on analysis of the NOAA Storm Database (not current: 1950-Nov.2011). The report is to answer two questions:  
-1. Across US, which events are most harmful to human health?  
-2. Across US, which events have the greatest economic consequences?  
-  
-Initially I will use this document as log for my analysis.  
+## Synopsis  
+This is a report on the health and economic impacts of storm event types categorized in the NOAA Storm Database over the time period 1950-2011. The objective is to analyze the database to determine:  
+1. which events were most harmful to human health, and  
+2. which events have the greatest economic impact.  
+Human health impacts are assessed via the number of fatalities and injuries associated with event types. Economic impacts are assessed by totaling property and agricultural damages associated with event types. The analysis shows that tornado events have caused the largest number of fatalities and injuries during the 1950-2011 time period. Flooding causes the greatest amount of property damage, while drought causes the most agricultural damage (flooding is also a close second for agricultural damage). As significant changes in population distribution, building codes, regulations, development intensity and patterns, and climate have occurred since 1950, the database was subsetted to look at the lastest decade, 2000-2011. The data shows that "extreme heat" event types have overtaken "tornados" as having the largest impact on fatalities. This may deserve futher investigation in light of predictions in the recent (2014) US National Climate Assessment Report.  
 
 ## Section 1. Data Processing  
 
@@ -171,7 +171,7 @@ legend("topleft", fill=rainbow(5), bg="white", cex=0.9, legend=c("agricultural d
   
 **Figure 2.** Total economic impact (agricultural and property damage) attributed to storm events in the NOAA Storm Database over the period 1950 to November 2011. Note that damage $s are reported on a log scale (see comments in Figure 1 caption). Also note that as described in the section 1, agricultural impacts from "fog" events were adjusted to a small nominal insignificant value to allow inclusion of this event in the plot.
 
-The NOAA Storm Database covers ~60 years of event impacts. Over that time, considerable changes have occurred, for example with regard to population distribution, building codes, regulations and development, zoning, and climate. Therefore we might expect to draw different conclusions from the data if only more recent data were reviewed. Figure 3 shows total health impacts for the same event types, but for the more recent time period 2000-2011. While "tornado" events continue to produce the greatest number of injuries, fatalities associated with "extreme heat" events have overtaken "tornados" as having the highest impact. This may be particularly important with regard to trend for more heatwave events forecast for high density urban areas as described in the [US National Climate Assessment Report 2014](nca2014.globalchange.gov).
+The NOAA Storm Database covers ~60 years of event impacts. Over that time, considerable changes have occurred, in particular, in population distribution, building codes, regulations, development intensity and patterns, and climate to name a few. Therefore we might expect to draw different conclusions if a narrower more recent time frame was reviewed. Figure 3 shows total health impacts for the same event types, but for the more recent time period 2000-2011. While "tornado" events continue to produce the greatest number of injuries, fatalities associated with "extreme heat" events have surpassed "tornados". No significant changes in the order of highest impact events for economic consequences were observed (not shown), both for property and agricultural damage. A potential trend to greater impact of "extreme heat" events on human health  may deserve further investigation, particularly in light of the predicted trend of more frequent and greater duration heatwave events forecast for high density urban areas as described in the [US National Climate Assessment Report 2014](nca2014.globalchange.gov).
 
 ```{r Figure 3}
 barplot(StormMat2000[1:2,], width=1, horiz=TRUE, space=0.3, cex.name=.7, log="x", las=2, col=rainbow(10), xlab="fatalities & injuries", main="Figure 3. Health impact from storm events 2000-2011")
