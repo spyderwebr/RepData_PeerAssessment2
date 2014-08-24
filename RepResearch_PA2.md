@@ -1,8 +1,9 @@
 ---
-title: 'Total health and economic impacts by US storm event types for 1950-2011'
+title: "Total health and economic impacts by US storm event types for 1950-2011"
 author: "Richard Webber"
 date: "August 23, 2014"
 output:
+  pdf_document: default
   html_document:
     theme: cerulean
 ---
